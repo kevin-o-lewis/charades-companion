@@ -1,183 +1,255 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClueInput } from "@/components/ClueInput";
-import { GameCard } from "@/components/GameCard";
-import { GameTimer } from "@/components/GameTimer";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PrepTimer } from "@/components/PrepTimer";
+import { ActTimer } from "@/components/ActTimer";
 import { ScoreBoard } from "@/components/ScoreBoard";
-import { Play, Settings, Users } from "lucide-react";
+import { Play, RotateCcw, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+interface Team {
+  name: string;
+  rounds: number[];
+  totalScore: number;
+}
+
+type GamePhase = 'setup' | 'preparation' | 'acting' | 'results';
+
 const Index = () => {
-  const [clues, setClues] = useState<string[]>([]);
-  const [currentClueIndex, setCurrentClueIndex] = useState(0);
-  const [teams, setTeams] = useState([
-    { name: "Team A", score: 0 },
-    { name: "Team B", score: 0 }
+  const [teams, setTeams] = useState<Team[]>([
+    { name: "Team A", rounds: [], totalScore: 0 },
+    { name: "Team B", rounds: [], totalScore: 0 }
   ]);
-  const [gameStarted, setGameStarted] = useState(false);
-  const [roundTime, setRoundTime] = useState(60);
+  const [currentTeam, setCurrentTeam] = useState(0);
+  const [gamePhase, setGamePhase] = useState<GamePhase>('setup');
+  const [roundNumber, setRoundNumber] = useState(1);
   const { toast } = useToast();
 
-  const addClue = (clue: string) => {
-    setClues([...clues, clue]);
-  };
-
-  const removeClue = (index: number) => {
-    setClues(clues.filter((_, i) => i !== index));
+  const updateTeamName = (index: number, name: string) => {
+    setTeams(teams.map((team, i) => 
+      i === index ? { ...team, name } : team
+    ));
   };
 
   const startGame = () => {
-    if (clues.length < 3) {
+    if (teams.some(team => !team.name.trim())) {
       toast({
-        title: "Need more clues",
-        description: "Add at least 3 clues to start the game.",
+        title: "Team names required",
+        description: "Please enter names for both teams.",
         variant: "destructive",
       });
       return;
     }
-    setGameStarted(true);
-    setCurrentClueIndex(0);
+    setGamePhase('preparation');
+    setCurrentTeam(0);
+    setRoundNumber(1);
   };
 
-  const nextClue = () => {
-    if (currentClueIndex < clues.length - 1) {
-      setCurrentClueIndex(currentClueIndex + 1);
-    } else {
-      // Reset to beginning
-      setCurrentClueIndex(0);
-      toast({
-        title: "Round complete!",
-        description: "All clues used. Starting over...",
-      });
-    }
+  const skipToActing = () => {
+    setGamePhase('acting');
   };
 
-  const skipClue = () => {
-    nextClue();
-  };
+  const saveRound = (elapsedTime: number) => {
+    const updatedTeams = teams.map((team, index) => {
+      if (index === currentTeam) {
+        const newRounds = [...team.rounds, elapsedTime];
+        const newTotalScore = newRounds.reduce((sum, time) => sum + time, 0);
+        return {
+          ...team,
+          rounds: newRounds,
+          totalScore: newTotalScore
+        };
+      }
+      return team;
+    });
 
-  const onScoreChange = (teamIndex: number, change: number) => {
-    setTeams(teams.map((team, index) =>
-      index === teamIndex
-        ? { ...team, score: Math.max(0, team.score + change) }
-        : team
-    ));
-  };
+    setTeams(updatedTeams);
+    
+    // Switch to next team's preparation phase
+    const nextTeam = (currentTeam + 1) % 2;
+    setCurrentTeam(nextTeam);
+    setGamePhase('preparation');
+    setRoundNumber(roundNumber + 1);
 
-  const onTimeUp = () => {
     toast({
-      title: "Time's up!",
-      description: "Switch teams and keep playing!",
+      title: "Round saved!",
+      description: `${teams[currentTeam].name} completed in ${Math.floor(elapsedTime / 60)}:${(elapsedTime % 60).toString().padStart(2, '0')}. Now ${teams[nextTeam].name}'s turn!`,
     });
   };
 
-  if (!gameStarted) {
+  const onPrepTimeUp = () => {
+    toast({
+      title: "Preparation time up!",
+      description: "Moving to acting phase.",
+    });
+    setGamePhase('acting');
+  };
+
+  const onActTimeUp = () => {
+    toast({
+      title: "Acting time up!",
+      description: "Time expired! Save the round to continue.",
+      variant: "destructive",
+    });
+  };
+
+  const viewResults = () => {
+    setGamePhase('results');
+  };
+
+  const startNewGame = () => {
+    setTeams([
+      { name: teams[0].name, rounds: [], totalScore: 0 },
+      { name: teams[1].name, rounds: [], totalScore: 0 }
+    ]);
+    setCurrentTeam(0);
+    setGamePhase('preparation');
+    setRoundNumber(1);
+  };
+
+  const backToSetup = () => {
+    setGamePhase('setup');
+  };
+
+  // Setup Phase
+  if (gamePhase === 'setup') {
     return (
       <div className="min-h-screen bg-background p-4">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-lg mx-auto space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Charades Game
+              Charades Companion
             </h1>
             <p className="text-muted-foreground">
-              Add your own clues and start playing!
+              Set up your teams and start playing!
             </p>
           </div>
 
-          <Tabs defaultValue="clues" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="clues">
-                <Settings className="h-4 w-4 mr-2" />
-                Setup Clues
-              </TabsTrigger>
-              <TabsTrigger value="teams">
-                <Users className="h-4 w-4 mr-2" />
-                Teams
-              </TabsTrigger>
-              <TabsTrigger value="settings">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </TabsTrigger>
-            </TabsList>
+          <Card>
+            <CardHeader>
+              <CardTitle>Team Setup</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="team1">Team 1 Name</Label>
+                <Input
+                  id="team1"
+                  value={teams[0].name}
+                  onChange={(e) => updateTeamName(0, e.target.value)}
+                  placeholder="Enter team 1 name"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="team2">Team 2 Name</Label>
+                <Input
+                  id="team2"
+                  value={teams[1].name}
+                  onChange={(e) => updateTeamName(1, e.target.value)}
+                  placeholder="Enter team 2 name"
+                />
+              </div>
 
-            <TabsContent value="clues" className="space-y-4">
-              <ClueInput
-                clues={clues}
-                onAddClue={addClue}
-                onRemoveClue={removeClue}
-              />
-              {clues.length >= 3 && (
-                <div className="text-center">
-                  <Button onClick={startGame} size="lg">
-                    <Play className="h-4 w-4 mr-2" />
-                    Start Game
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
+              <div className="text-center pt-4">
+                <Button onClick={startGame} size="lg">
+                  <Play className="h-4 w-4 mr-2" />
+                  Start Game
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-            <TabsContent value="teams">
-              <ScoreBoard teams={teams} onScoreChange={onScoreChange} />
-            </TabsContent>
-
-            <TabsContent value="settings">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Game Settings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">Round Duration</label>
-                      <select
-                        value={roundTime}
-                        onChange={(e) => setRoundTime(Number(e.target.value))}
-                        className="px-3 py-1 border rounded-md bg-background"
-                      >
-                        <option value={30}>30 seconds</option>
-                        <option value={60}>1 minute</option>
-                        <option value={90}>1.5 minutes</option>
-                        <option value={120}>2 minutes</option>
-                      </select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <div className="bg-muted/50 p-4 rounded-lg">
+            <h3 className="font-semibold mb-2">How to Play:</h3>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• Each team alternates turns acting out clues</li>
+              <li>• Preparation phase: 1:00 to prepare (can skip early)</li>
+              <li>• Acting phase: 3:00 to act out the clue</li>
+              <li>• Lower total time wins!</li>
+            </ul>
+          </div>
         </div>
       </div>
     );
   }
 
+  // Results Phase
+  if (gamePhase === 'results') {
+    const winner = teams.reduce((prev, current) => {
+      if (current.totalScore === 0) return prev;
+      if (prev.totalScore === 0) return current;
+      return current.totalScore < prev.totalScore ? current : prev;
+    });
+
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="text-center space-y-4">
+            <h1 className="text-3xl font-bold">Game Results</h1>
+            {winner.totalScore > 0 && (
+              <div className="flex items-center justify-center gap-2 text-2xl font-bold text-primary">
+                <Trophy className="h-8 w-8" />
+                {winner.name} Wins!
+              </div>
+            )}
+          </div>
+
+          <ScoreBoard teams={teams} />
+
+          <div className="flex justify-center gap-4">
+            <Button onClick={startNewGame} size="lg">
+              <Play className="h-4 w-4 mr-2" />
+              New Game
+            </Button>
+            <Button onClick={backToSetup} size="lg" variant="outline">
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Back to Setup
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Game Phase (Preparation or Acting)
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="text-center">
-          <Button
-            variant="outline"
-            onClick={() => setGameStarted(false)}
-            className="mb-4"
-          >
+        <div className="text-center space-y-2">
+          <div className="text-3xl font-bold text-primary">
+            {teams[currentTeam].name}
+          </div>
+          <div className="text-lg text-muted-foreground">
+            Round {Math.ceil(roundNumber / 2)} • {gamePhase === 'preparation' ? 'Preparation Phase' : 'Acting Phase'}
+          </div>
+        </div>
+
+        {gamePhase === 'preparation' && (
+          <PrepTimer 
+            onSkipToActing={skipToActing}
+            onTimeUp={onPrepTimeUp}
+          />
+        )}
+
+        {gamePhase === 'acting' && (
+          <ActTimer 
+            onSaveRound={saveRound}
+            onTimeUp={onActTimeUp}
+          />
+        )}
+
+        <ScoreBoard teams={teams} currentTeam={currentTeam} />
+
+        <div className="flex justify-center gap-4">
+          <Button onClick={viewResults} variant="outline">
+            View Results
+          </Button>
+          <Button onClick={backToSetup} variant="outline">
             Back to Setup
           </Button>
         </div>
-
-        <GameTimer
-          duration={roundTime}
-          onTimeUp={onTimeUp}
-        />
-
-        <GameCard
-          clue={clues[currentClueIndex]}
-          onNext={nextClue}
-          onSkip={skipClue}
-          canGoNext={true}
-        />
-
-        <ScoreBoard teams={teams} onScoreChange={onScoreChange} />
       </div>
     </div>
   );

@@ -1,20 +1,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus, Minus, Trophy } from "lucide-react";
+import { Trophy, Clock } from "lucide-react";
 
 interface Team {
   name: string;
-  score: number;
+  rounds: number[];
+  totalScore: number;
 }
 
 interface ScoreBoardProps {
   teams: Team[];
-  onScoreChange: (teamIndex: number, change: number) => void;
+  currentTeam?: number;
 }
 
-export const ScoreBoard = ({ teams, onScoreChange }: ScoreBoardProps) => {
-  const maxScore = Math.max(...teams.map(t => t.score));
-  const leaders = teams.filter(t => t.score === maxScore && maxScore > 0);
+export const ScoreBoard = ({ teams, currentTeam }: ScoreBoardProps) => {
+  const minScore = Math.min(...teams.map(t => t.totalScore).filter(score => score > 0));
+  const leaders = teams.filter(t => t.totalScore === minScore && t.totalScore > 0);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <Card className="w-full">
@@ -27,47 +33,65 @@ export const ScoreBoard = ({ teams, onScoreChange }: ScoreBoardProps) => {
       <CardContent className="space-y-4">
         {teams.map((team, index) => {
           const isLeader = leaders.includes(team) && leaders.length === 1;
+          const isCurrentTeam = currentTeam === index;
+          
           return (
             <div
               key={index}
-              className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
-                isLeader
+              className={`p-4 rounded-lg border transition-all ${
+                isCurrentTeam
+                  ? 'border-primary bg-primary/10'
+                  : isLeader
                   ? 'border-primary bg-primary/5'
                   : 'border-border bg-card'
               }`}
             >
-              <div className="flex items-center gap-2">
-                {isLeader && <Trophy className="h-4 w-4 text-primary" />}
-                <span className="font-medium">{team.name}</span>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  {isLeader && <Trophy className="h-4 w-4 text-primary" />}
+                  <span className={`font-medium ${isCurrentTeam ? 'text-primary font-bold' : ''}`}>
+                    {team.name}
+                  </span>
+                  {isCurrentTeam && <span className="text-sm text-primary">(Current Turn)</span>}
+                </div>
+                
+                <div className="text-right">
+                  <div className="text-2xl font-bold">
+                    {team.totalScore > 0 ? formatTime(team.totalScore) : '-'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Total Time {team.rounds.length > 0 && `(${team.rounds.length} rounds)`}
+                  </div>
+                </div>
               </div>
               
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onScoreChange(index, -1)}
-                  disabled={team.score <= 0}
-                  className="h-8 w-8 p-0"
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                
-                <span className="text-2xl font-bold min-w-[3rem] text-center">
-                  {team.score}
-                </span>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onScoreChange(index, 1)}
-                  className="h-8 w-8 p-0"
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
+              {team.rounds.length > 0 && (
+                <div className="space-y-1">
+                  <div className="text-sm font-medium flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    Round Times:
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {team.rounds.map((time, roundIndex) => (
+                      <span
+                        key={roundIndex}
+                        className="text-xs bg-muted px-2 py-1 rounded"
+                      >
+                        R{roundIndex + 1}: {formatTime(time)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
+        
+        {teams.some(t => t.totalScore > 0) && (
+          <div className="text-center text-sm text-muted-foreground pt-2 border-t">
+            Lower total time wins!
+          </div>
+        )}
       </CardContent>
     </Card>
   );

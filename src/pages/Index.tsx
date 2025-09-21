@@ -95,6 +95,14 @@ const Index = () => {
     });
   };
 
+  const handleReturnToPrep = () => {
+    setGamePhase('preparation');
+    toast({
+      title: "Returned to preparation",
+      description: "Take your time to prepare!",
+    });
+  };
+
   const viewResults = () => {
     setGamePhase('results');
   };
@@ -237,6 +245,7 @@ const Index = () => {
           <ActTimer 
             onSaveRound={saveRound}
             onTimeUp={onActTimeUp}
+            onReturnToPrep={handleReturnToPrep}
           />
         )}
 

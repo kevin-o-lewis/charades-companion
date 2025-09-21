@@ -64,13 +64,13 @@ export const PrepTimer = ({ onSkipToActing, onTimeUp }: PrepTimerProps) => {
   const isLowTime = timeLeft <= 10 && timeLeft > 0;
 
   return (
-    <Card className="w-full">
+    <Card className="w-full mobile-touch">
       <CardHeader className="text-center">
-        <CardTitle className="text-xl">Preparation Timer</CardTitle>
+        <CardTitle className="text-xl no-select">Preparation Timer</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="text-center space-y-4">
-          <div className="relative w-48 h-48 mx-auto">
+          <div className="relative w-44 h-44 sm:w-48 sm:h-48 mx-auto">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
               {/* Background circle */}
               <circle
@@ -87,7 +87,7 @@ export const PrepTimer = ({ onSkipToActing, onTimeUp }: PrepTimerProps) => {
                 cy="50"
                 r="45"
                 fill="none"
-                stroke={isLowTime ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+                stroke={isLowTime ? "hsl(var(--destructive))" : "hsl(var(--accent))"}
                 strokeWidth="8"
                 strokeDasharray={`${2 * Math.PI * 45}`}
                 strokeDashoffset={`${2 * Math.PI * 45 * (1 - progressValue / 100)}`}
@@ -95,34 +95,34 @@ export const PrepTimer = ({ onSkipToActing, onTimeUp }: PrepTimerProps) => {
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`text-4xl font-bold ${isLowTime ? 'text-destructive animate-pulse' : 'text-foreground'}`}>
+              <span className={`text-3xl sm:text-4xl font-bold no-select ${isLowTime ? 'text-destructive animate-pulse' : 'text-foreground'}`}>
                 {formatTime(timeLeft)}
               </span>
             </div>
           </div>
         </div>
         
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-2 flex-wrap">
           {!isRunning ? (
-            <Button onClick={handleStart} size="lg" disabled={timeLeft === 0}>
+            <Button onClick={handleStart} size="lg" disabled={timeLeft === 0} className="mobile-touch">
               <Play className="h-4 w-4 mr-2" />
               Start
             </Button>
           ) : (
-            <Button onClick={handlePause} size="lg" variant="secondary">
+            <Button onClick={handlePause} size="lg" variant="secondary" className="mobile-touch">
               <Pause className="h-4 w-4 mr-2" />
               Pause
             </Button>
           )}
           
-          <Button onClick={handleReset} size="lg" variant="outline">
+          <Button onClick={handleReset} size="lg" variant="outline" className="mobile-touch">
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset
           </Button>
         </div>
 
         <div className="text-center">
-          <Button onClick={onSkipToActing} size="lg" variant="default">
+          <Button onClick={onSkipToActing} size="lg" variant="default" className="mobile-touch">
             <FastForward className="h-4 w-4 mr-2" />
             Skip to Acting
           </Button>

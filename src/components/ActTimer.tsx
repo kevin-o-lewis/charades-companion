@@ -6,9 +6,10 @@ import { Play, Pause, RotateCcw, Save } from "lucide-react";
 interface ActTimerProps {
   onSaveRound: (elapsedTime: number) => void;
   onTimeUp: () => void;
+  onReturnToPrep: () => void;
 }
 
-export const ActTimer = ({ onSaveRound, onTimeUp }: ActTimerProps) => {
+export const ActTimer = ({ onSaveRound, onTimeUp, onReturnToPrep }: ActTimerProps) => {
   const [timeLeft, setTimeLeft] = useState(180); // 3:00 in seconds
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(180);
@@ -76,13 +77,13 @@ export const ActTimer = ({ onSaveRound, onTimeUp }: ActTimerProps) => {
   const isLowTime = timeLeft <= 30 && timeLeft > 0;
 
   return (
-    <Card className="w-full">
+    <Card className="w-full mobile-touch">
       <CardHeader className="text-center">
-        <CardTitle className="text-xl">Acting Timer</CardTitle>
+        <CardTitle className="text-xl no-select">Acting Timer</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="text-center space-y-4">
-          <div className="relative w-48 h-48 mx-auto">
+          <div className="relative w-44 h-44 sm:w-48 sm:h-48 mx-auto">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
               {/* Background circle */}
               <circle
@@ -107,34 +108,37 @@ export const ActTimer = ({ onSaveRound, onTimeUp }: ActTimerProps) => {
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`text-4xl font-bold ${isLowTime ? 'text-destructive animate-pulse' : 'text-foreground'}`}>
+              <span className={`text-3xl sm:text-4xl font-bold no-select ${isLowTime ? 'text-destructive animate-pulse' : 'text-foreground'}`}>
                 {formatTime(timeLeft)}
               </span>
             </div>
           </div>
         </div>
         
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-2 flex-wrap">
           {!isRunning ? (
-            <Button onClick={handleStart} size="lg" disabled={timeLeft === 0}>
+            <Button onClick={handleStart} size="lg" disabled={timeLeft === 0} className="mobile-touch">
               <Play className="h-4 w-4 mr-2" />
               Start
             </Button>
           ) : (
-            <Button onClick={handlePause} size="lg" variant="secondary">
+            <Button onClick={handlePause} size="lg" variant="secondary" className="mobile-touch">
               <Pause className="h-4 w-4 mr-2" />
               Pause
             </Button>
           )}
           
-          <Button onClick={handleReset} size="lg" variant="outline">
+          <Button onClick={handleReset} size="lg" variant="outline" className="mobile-touch">
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset
           </Button>
         </div>
 
-        <div className="text-center">
-          <Button onClick={handleSave} size="lg" variant="default" disabled={startTime - timeLeft === 0}>
+        <div className="flex justify-center gap-2 flex-wrap">
+          <Button onClick={onReturnToPrep} size="lg" variant="outline" className="mobile-touch">
+            Return to Prep
+          </Button>
+          <Button onClick={handleSave} size="lg" variant="default" disabled={startTime - timeLeft === 0} className="mobile-touch">
             <Save className="h-4 w-4 mr-2" />
             Save Round
           </Button>

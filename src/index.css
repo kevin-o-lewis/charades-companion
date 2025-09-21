@@ -113,5 +113,34 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    /* Prevent text selection on mobile */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    /* Prevent touch callouts */
+    -webkit-touch-callout: none;
+    /* Prevent pinch zoom */
+    touch-action: manipulation;
+  }
+
+  html {
+    /* Prevent pull-to-refresh */
+    overscroll-behavior: none;
+  }
+}
+
+@layer components {
+  /* Mobile-optimized button touches */
+  .mobile-touch {
+    @apply min-h-[44px] min-w-[44px] touch-manipulation;
+  }
+  
+  /* Prevent text selection on game elements */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 }

@@ -14,7 +14,183 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clues: {
+        Row: {
+          created_at: string
+          id: string
+          is_used: boolean
+          room_id: string
+          team_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_used?: boolean
+          room_id: string
+          team_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_used?: boolean
+          room_id?: string
+          team_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clues_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clues_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          acting_time: number
+          clues_per_team: number
+          code: string
+          created_at: string
+          creator_id: string
+          current_phase: string | null
+          current_team: string | null
+          id: string
+          prep_time: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          acting_time?: number
+          clues_per_team?: number
+          code: string
+          created_at?: string
+          creator_id: string
+          current_phase?: string | null
+          current_team?: string | null
+          id?: string
+          prep_time?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          acting_time?: number
+          clues_per_team?: number
+          code?: string
+          created_at?: string
+          creator_id?: string
+          current_phase?: string | null
+          current_team?: string | null
+          id?: string
+          prep_time?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rounds: {
+        Row: {
+          clue_id: string
+          created_at: string
+          elapsed_time: number
+          id: string
+          room_id: string
+          round_number: number
+          team_id: string
+        }
+        Insert: {
+          clue_id: string
+          created_at?: string
+          elapsed_time: number
+          id?: string
+          room_id: string
+          round_number: number
+          team_id: string
+        }
+        Update: {
+          clue_id?: string
+          created_at?: string
+          elapsed_time?: number
+          id?: string
+          room_id?: string
+          round_number?: number
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rounds_clue_id_fkey"
+            columns: ["clue_id"]
+            isOneToOne: false
+            referencedRelation: "clues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rounds_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rounds_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          captain_id: string
+          created_at: string
+          id: string
+          is_ready: boolean
+          name: string
+          position: number
+          room_id: string
+          total_score: number
+        }
+        Insert: {
+          captain_id: string
+          created_at?: string
+          id?: string
+          is_ready?: boolean
+          name: string
+          position: number
+          room_id: string
+          total_score?: number
+        }
+        Update: {
+          captain_id?: string
+          created_at?: string
+          id?: string
+          is_ready?: boolean
+          name?: string
+          position?: number
+          room_id?: string
+          total_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
